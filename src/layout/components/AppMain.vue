@@ -1,7 +1,14 @@
 <template>
   <section class="app-main">
     <transition name="fade-transform" mode="out-in">
+      <!-- app-main 外部包了一层 keep-alive 主要是为了缓存 <router-view> 的，
+      配合页面的 tabs-view 标签导航使用，如不需要可自行去除 -->
       <keep-alive :include="cachedViews">
+        <!--
+          在 router-view 上加上一个唯一的 key，
+          来保证路由切换时都会重新渲染触发钩子了。
+          解决不同的路由每次都渲染相同的组件
+        -->
         <router-view :key="key" />
       </keep-alive>
     </transition>
@@ -16,6 +23,7 @@ export default {
       return this.$store.state.tagsView.cachedViews
     },
     key() {
+      // 只要保证 key 唯一性就可以了，保证不同页面的 key 不相同
       return this.$route.path
     }
   }

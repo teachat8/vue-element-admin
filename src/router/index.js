@@ -34,10 +34,38 @@ import nestedRouter from './modules/nested'
  */
 
 /**
+  当设置 true 的时候该路由不会再侧边栏出现 如401，login等页面，或者如一些编辑页面/edit/1
+  hidden: true // (默认 false)
+
+  当设置 noredirect 的时候该路由在面包屑导航中不可被点击
+  redirect: 'noredirect'
+
+  当你一个路由下面的 children 声明的路由大于1个时，自动会变成嵌套的模式--如组件页面
+  只有一个时，会将那个子路由当做根路由显示在侧边栏--如引导页面
+  若你想不管路由下面的 children 声明的个数都显示你的根路由
+  你可以设置 alwaysShow: true，这样它就会忽略之前定义的规则，一直显示根路由
+  alwaysShow: true
+
+  name: 'router-name' //设定路由的名字，一定要填写不然使用<keep-alive>时会出现各种问题
+  meta: {
+    roles: ['admin', 'editor'] //设置该路由进入的权限，支持多个权限叠加
+    title: 'title' //设置该路由在侧边栏和面包屑中展示的名字
+    icon: 'svg-name' //设置该路由的图标
+    noCache: true //如果设置为true，则不会被 <keep-alive> 缓存(默认 false)
+    breadcrumb: false // 如果设置为false，则不会在breadcrumb面包屑中显示
+  }
+ */
+
+/**
  * constantRoutes
  * a base page that does not have permission requirements
  * all roles can be accessed
  */
+
+/**
+  * 所有权限通用路由表
+  * 如首页和登录页和一些不用权限的公用页面
+  */
 export const constantRoutes = [
   {
     path: '/redirect',
@@ -86,6 +114,7 @@ export const constantRoutes = [
   {
     path: '/documentation',
     component: Layout,
+    // 这里开始对应的路由都会显示在app-main中
     children: [
       {
         path: 'index',
@@ -128,26 +157,31 @@ export const constantRoutes = [
  * asyncRoutes
  * the routes that need to be dynamically loaded based on user roles
  */
+
+/**
+ * 异步挂载的路由
+ * 动态需要根据权限加载的路由表
+ */
 export const asyncRoutes = [
   {
     path: '/permission',
     component: Layout,
-    redirect: '/permission/page',
-    alwaysShow: true, // will always show the root menu
-    name: 'Permission',
+    redirect: '/permission/page', // 重定向地址，在面包屑中点击会重定向去的地址
+    alwaysShow: true, // will always show the root menu 一直显示根路由
+    name: 'Permission', // 权限测试
     meta: {
       title: 'permission',
-      icon: 'lock',
-      roles: ['admin', 'editor'] // you can set roles in root nav
+      icon: 'lock', // 图标
+      roles: ['admin', 'editor'] // // 页面需要的权限 表示该页面只有admin和超级编辑才能有资格进入。 你可以在根路由设置权限，这样它下面所以的子路由都继承了这个权限
     },
     children: [
       {
         path: 'page',
         component: () => import('@/views/permission/page'),
-        name: 'PagePermission',
+        name: 'PagePermission', // 权限测试页
         meta: {
           title: 'pagePermission',
-          roles: ['admin'] // or you can only set roles in sub nav
+          roles: ['admin'] // 页面需要的权限 or you can only set roles in sub nav
         }
       },
       {
@@ -399,6 +433,7 @@ export const asyncRoutes = [
   { path: '*', redirect: '/404', hidden: true }
 ]
 
+// 实例化vue的时候只挂载constantRouter
 const createRouter = () => new Router({
   // mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
@@ -408,6 +443,7 @@ const createRouter = () => new Router({
 const router = createRouter()
 
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
+// hack 的方法，能很好的动态清除注册的路由
 export function resetRouter() {
   const newRouter = createRouter()
   router.matcher = newRouter.matcher // reset router
